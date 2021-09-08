@@ -12,7 +12,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 public class LoginPage extends Reusables {
-
+	
 	// TODO Auto-generated method stub
 	@Given("User is on Login Page")
 	public void user_is_on_login_page() {
@@ -23,20 +23,11 @@ public class LoginPage extends Reusables {
 		ScreenShot(driver, "home");
 		ExtentReports extent = new ExtentReports();
 		ExtentSparkReporter spark = new ExtentSparkReporter("target/Spark.html");
-		
 		extent.attachReporter(spark);
-		
-		ExtentTest test = extent.createTest("MyFirstTest", "Testing Extent Reorts");
-ScreenShot(driver, "img");
-ScreenShotByte(driver, "Test");
+		ExtentTest test = extent.createTest("MyFirstTest", "Testing Extent Reports");
 		// reference image saved to disk
-		test.pass(MediaEntityBuilder.createScreenCaptureFromPath("JavaCucu/target/screenShot/home.png").build());
-
-		// base64
-		test.pass(MediaEntityBuilder.createScreenCaptureFromBase64String("JavaCucu/target/screenShotByte/Test.png").build());
-
-		//Reusables.getProperties("login.button.xpath");
-extent.flush();
+		test.pass(MediaEntityBuilder.createScreenCaptureFromPath("C:/Users/Akhil/git/MyRepo/target/screenShot/home.png").build());
+		extent.flush();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -62,7 +53,7 @@ extent.flush();
 	@And("User clicks on Login button")
 	public void user_clicks_on_login_button() {
 		System.out.println("Login Button clicked");
-		driver.manage().window().maximize();
+		
 	}
 
 	@Then("User should be logged in")

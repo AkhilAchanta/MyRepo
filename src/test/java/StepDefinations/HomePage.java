@@ -29,18 +29,19 @@ public class HomePage extends Reusables {
 			e.printStackTrace();
 		}
 		MouseOver(driver, ElectronicsHome);
-		
-		MouseOver(driver, EleOptions);
+
+		/*MouseOver(driver, EleOptions);*/
 	}
 
 	@Then("user should see the list and count of the options avialable")
 	public static void user_should_see_the_list_and_count_of_the_options_avialable() {
-
+		String Text = driver.findElement(ElectronicsHome).getText();
+		System.out.println(ElectronicsHome);
 		/*
 		 System.out.println("Electronics selected");
 		WebDriverWait wait= new WebDriverWait(driver,30);
 		List <WebElement> Eleoptions = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(EleOptions)); 
-		*/
+
 		List <WebElement> Eleoptions = driver.findElements(EleOptions);
 		int numOptions = Eleoptions.size();
 		System.out.println(numOptions);
@@ -53,7 +54,8 @@ public class HomePage extends Reusables {
 			//String OptName= driver.findElement((By) Element).getText();
 			System.out.println(Element);
 
-		}
+		}*/
+
 
 	}
 
