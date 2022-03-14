@@ -1,36 +1,75 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the workflow will run
+name: config-request-automation
 on:
-   [push, pull_request]
- 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  issues:
+    types: [opened, edited]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  label-and-assign-project:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: peterjgrainger/action-create-branch@v2.0.1
-        env:
-         GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+      - name: Run Issue form parser
+        id: parse
+        uses: peter-murray/issue-forms-body-parser@v1.1.0
         with:
-         branch: 'feature_Test'
-         
-  sonarcloud:
-    name: SonarCloud
+          issue_id: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+          separator: '###'
+          label_marker_start: ' '
+          label_marker_end: ' '
+      - name: Label Brand
+        uses: andymckay/labeler@1.0.3
+        with:
+          add-labels: ${{ fromJSON(steps.parse.outputs.payload)[' Brand'] }}
+      - name: Label Productline
+        uses: andymckay/labeler@1.0.3
+        with:
+          add-labels: ${{ fromJSON(steps.parse.outputs.payload)[' Productline'] }}
+      - name: Move Card to In Progress
+        uses: peter-evans/create-or-update-project-card@v1
+        if: contains(github.event.issue.labels.*.name, 'Configuration-Request')
+        with:
+          project-name: 'ONE.Shop Configuration Requests'
+          column-name: 'To do'
+          issue-number: ${{ github.event.issue.number }}
+  automated-pr-from-issue:
+    needs: label-and-assign-project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Run Issue form parser
+        id: parse
+        uses: peter-murray/issue-forms-body-parser@v1.1.0
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          issue_id: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+          separator: '###'
+          label_marker_start: ' '
+          label_marker_end: ' '
+      - name: Show parsed data JSON
+        run: |
+          echo "${{ steps.parse.outputs.payload }}"
+      - name: Uncommitted change for testing
+        run: date +%s > test-automated-config-update.txt
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'feat: update config for issue #${{ github.event.issue.number }}'
+          committer: ONE.Shop Config Bot <thomas.haug@diconium.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          branch: feature/auto-generated-config-update-${{ github.event.issue.number }}
+          delete-branch: true
+          title: '[Config-Request] update config for issue #${{ github.event.issue.number }}'
+          body: 'Closes #${{ github.event.issue.number }}'
+          draft: false
+      - name: Move Issue Card to In Progress
+        uses: peter-evans/create-or-update-project-card@v1
+        with:
+          project-name: 'ONE.Shop Configuration Requests'
+          column-name: 'In progress'
+          issue-number: ${{ github.event.issue.number }}
+      - name: Move PR Card to In Progress
+        uses: peter-evans/create-or-update-project-card@v1
+        with:
+          project-name: 'ONE.Shop Configuration Requests'
+          column-name: 'In progress'
+          issue-number: ${{ steps.cpr.outputs.pull-request-number }}
